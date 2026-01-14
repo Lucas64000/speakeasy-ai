@@ -7,6 +7,7 @@ import { ThemeProvider } from "@/hooks/use-theme";
 import Dashboard from "./pages/Dashboard";
 import ChatConversation from "./pages/ChatConversation";
 import History from "./pages/History";
+import Metrics from "./pages/Metrics";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -22,6 +23,7 @@ const App = () => (
             <Route path="/" element={<Dashboard />} />
             <Route path="/chat/:id" element={<ChatConversation />} />
             <Route path="/history" element={<History />} />
+            <Route path="/metrics" element={<Metrics />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
