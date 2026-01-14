@@ -1,23 +1,9 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowLeft, Settings, Volume2, VolumeX } from "lucide-react";
+import { ArrowLeft, Volume2, VolumeX } from "lucide-react";
 import { Link } from "react-router-dom";
 import { ChatMessage } from "@/components/chat/ChatMessage";
 import { ChatInput } from "@/components/chat/ChatInput";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-
-const coachTones = [
-  { value: "friendly", label: "Amical" },
-  { value: "formal", label: "Formel" },
-  { value: "encouraging", label: "Encourageant" },
-  { value: "strict", label: "Strict" },
-];
 
 const mockMessages = [
   {
@@ -80,11 +66,16 @@ const mockMessages = [
   },
 ];
 
+// Ces infos viendraient du contexte de création de conversation
+const conversationInfo = {
+  title: "Conversation au restaurant",
+  language: "Français",
+  coachTone: "Amical",
+};
+
 export default function ChatConversation() {
   const [messages, setMessages] = useState(mockMessages);
-  const [coachTone, setCoachTone] = useState("friendly");
   const [audioEnabled, setAudioEnabled] = useState(true);
-  const [showSettings, setShowSettings] = useState(false);
 
   const handleSendMessage = (content: string) => {
     const newMessage = {
@@ -101,7 +92,6 @@ export default function ChatConversation() {
   };
 
   const handleSendVoice = () => {
-    // Placeholder for voice message
     const newMessage = {
       id: Date.now().toString(),
       type: "voice" as const,
@@ -133,10 +123,10 @@ export default function ChatConversation() {
               </Link>
               <div>
                 <h1 className="font-display font-semibold text-foreground">
-                  Conversation au restaurant
+                  {conversationInfo.title}
                 </h1>
                 <p className="text-xs text-muted-foreground">
-                  Français • Coach amical
+                  {conversationInfo.language} • Coach {conversationInfo.coachTone.toLowerCase()}
                 </p>
               </div>
             </div>
@@ -153,46 +143,8 @@ export default function ChatConversation() {
                   <VolumeX className="w-5 h-5 text-muted-foreground" />
                 )}
               </button>
-
-              {/* Settings */}
-              <button
-                onClick={() => setShowSettings(!showSettings)}
-                className="w-9 h-9 rounded-full bg-muted hover:bg-muted/80 flex items-center justify-center transition-colors"
-              >
-                <Settings className="w-5 h-5 text-muted-foreground" />
-              </button>
             </div>
           </div>
-
-          {/* Settings panel */}
-          {showSettings && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              exit={{ opacity: 0, height: 0 }}
-              className="mt-3 pt-3 border-t border-border"
-            >
-              <div className="flex items-center gap-4">
-                <div className="flex-1">
-                  <label className="text-xs text-muted-foreground mb-1 block">
-                    Ton du coach
-                  </label>
-                  <Select value={coachTone} onValueChange={setCoachTone}>
-                    <SelectTrigger className="w-full">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {coachTones.map((tone) => (
-                        <SelectItem key={tone.value} value={tone.value}>
-                          {tone.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-            </motion.div>
-          )}
         </div>
       </header>
 
