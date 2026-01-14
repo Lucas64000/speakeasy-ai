@@ -1,9 +1,12 @@
 import { useState } from "react";
-import { motion } from "framer-motion";
 import { ArrowLeft, Volume2, VolumeX } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { ChatMessage } from "@/components/chat/ChatMessage";
 import { ChatInput } from "@/components/chat/ChatInput";
+import { ConversationStatusMenu } from "@/components/conversation/ConversationStatusMenu";
+import { toast } from "sonner";
+
+type ConversationStatus = "active" | "completed" | "archived";
 
 const mockMessages = [
   {
@@ -74,8 +77,10 @@ const conversationInfo = {
 };
 
 export default function ChatConversation() {
+  const navigate = useNavigate();
   const [messages, setMessages] = useState(mockMessages);
   const [audioEnabled, setAudioEnabled] = useState(true);
+  const [status, setStatus] = useState<ConversationStatus>("active");
 
   const handleSendMessage = (content: string) => {
     const newMessage = {
@@ -108,6 +113,40 @@ export default function ChatConversation() {
     setMessages([...messages, newMessage]);
   };
 
+  const handleStatusChange = (newStatus: ConversationStatus) => {
+    setStatus(newStatus);
+    const labels = {
+      active: "en cours",
+      completed: "terminée",
+      archived: "archivée",
+    };
+    toast.success(`Conversation marquée comme ${labels[newStatus]}`);
+  };
+
+  const handleDelete = () => {
+    toast.success("Conversation supprimée");
+    navigate("/");
+  };
+
+  const getStatusBadge = () => {
+    switch (status) {
+      case "active":
+        return null;
+      case "completed":
+        return (
+          <span className="text-xs px-2 py-0.5 bg-success/10 text-success rounded-full">
+            Terminée
+          </span>
+        );
+      case "archived":
+        return (
+          <span className="text-xs px-2 py-0.5 bg-muted text-muted-foreground rounded-full">
+            Archivée
+          </span>
+        );
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {/* Header */}
@@ -122,9 +161,12 @@ export default function ChatConversation() {
                 <ArrowLeft className="w-5 h-5 text-muted-foreground" />
               </Link>
               <div>
-                <h1 className="font-display font-semibold text-foreground">
-                  {conversationInfo.title}
-                </h1>
+                <div className="flex items-center gap-2">
+                  <h1 className="font-display font-semibold text-foreground">
+                    {conversationInfo.title}
+                  </h1>
+                  {getStatusBadge()}
+                </div>
                 <p className="text-xs text-muted-foreground">
                   {conversationInfo.language} • Coach {conversationInfo.coachTone.toLowerCase()}
                 </p>
@@ -143,6 +185,13 @@ export default function ChatConversation() {
                   <VolumeX className="w-5 h-5 text-muted-foreground" />
                 )}
               </button>
+
+              {/* Status menu */}
+              <ConversationStatusMenu
+                currentStatus={status}
+                onStatusChange={handleStatusChange}
+                onDelete={handleDelete}
+              />
             </div>
           </div>
         </div>
@@ -162,12 +211,20 @@ export default function ChatConversation() {
         </div>
       </main>
 
-      {/* Input */}
-      <ChatInput
-        onSendMessage={handleSendMessage}
-        onSendVoice={handleSendVoice}
-        placeholder="Tapez ou envoyez un vocal..."
-      />
+      {/* Input - disabled if archived */}
+      {status !== "archived" ? (
+        <ChatInput
+          onSendMessage={handleSendMessage}
+          onSendVoice={handleSendVoice}
+          placeholder="Tapez ou envoyez un vocal..."
+        />
+      ) : (
+        <div className="bg-card border-t border-border p-4">
+          <div className="max-w-3xl mx-auto text-center text-sm text-muted-foreground">
+            Cette conversation est archivée. Changez le statut pour continuer.
+          </div>
+        </div>
+      )}
     </div>
   );
 }
