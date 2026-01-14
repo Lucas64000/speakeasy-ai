@@ -12,6 +12,8 @@ import {
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
+import { Header } from "@/components/layout/Header";
+import { NewConversationDialog } from "@/components/conversation/NewConversationDialog";
 
 interface ConversationPreview {
   id: string;
@@ -58,6 +60,7 @@ const stats = [
 
 export default function Dashboard() {
   const [selectedLanguage] = useState("Français");
+  const [showNewConversation, setShowNewConversation] = useState(false);
 
   const getStatusIcon = (status: ConversationPreview["status"]) => {
     switch (status) {
@@ -72,32 +75,7 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="bg-card border-b border-border sticky top-0 z-10">
-        <div className="max-w-5xl mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="font-display text-2xl font-bold text-foreground">
-                Lingua<span className="text-primary">Flow</span>
-              </h1>
-            </div>
-            <nav className="flex items-center gap-2">
-              <Link
-                to="/"
-                className="px-3 py-2 text-sm font-medium text-foreground bg-muted rounded-lg"
-              >
-                Dashboard
-              </Link>
-              <Link
-                to="/history"
-                className="px-3 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-              >
-                Historique
-              </Link>
-            </nav>
-          </div>
-        </div>
-      </header>
+      <Header />
 
       <main className="max-w-5xl mx-auto px-4 py-8">
         {/* Welcome section */}
@@ -122,7 +100,7 @@ export default function Dashboard() {
           transition={{ duration: 0.4, delay: 0.1 }}
           className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8"
         >
-          {stats.map((stat, index) => (
+          {stats.map((stat) => (
             <div
               key={stat.label}
               className="bg-card rounded-2xl p-4 shadow-card"
@@ -147,9 +125,9 @@ export default function Dashboard() {
           transition={{ duration: 0.4, delay: 0.2 }}
           className="mb-8"
         >
-          <Link
-            to="/chat/new"
-            className="block bg-primary text-primary-foreground rounded-2xl p-6 shadow-card-lg hover:shadow-card-xl transition-shadow group"
+          <button
+            onClick={() => setShowNewConversation(true)}
+            className="w-full block bg-primary text-primary-foreground rounded-2xl p-6 shadow-card-lg hover:shadow-card-xl transition-shadow group text-left"
           >
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
@@ -167,7 +145,7 @@ export default function Dashboard() {
               </div>
               <ChevronRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
             </div>
-          </Link>
+          </button>
         </motion.div>
 
         {/* Recent conversations */}
@@ -228,6 +206,11 @@ export default function Dashboard() {
           </div>
         </motion.div>
       </main>
+
+      <NewConversationDialog 
+        open={showNewConversation} 
+        onOpenChange={setShowNewConversation} 
+      />
     </div>
   );
 }
