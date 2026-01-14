@@ -3,8 +3,6 @@ import { motion } from "framer-motion";
 import { 
   MessageSquare, 
   Clock, 
-  TrendingUp, 
-  BookOpen, 
   ChevronRight,
   Plus,
   CheckCircle,
@@ -22,6 +20,7 @@ interface ConversationPreview {
   status: "active" | "completed" | "archived";
   language: string;
   updatedAt: Date;
+  messagesCount: number;
 }
 
 const mockConversations: ConversationPreview[] = [
@@ -32,6 +31,7 @@ const mockConversations: ConversationPreview[] = [
     status: "active",
     language: "Français",
     updatedAt: new Date(),
+    messagesCount: 24,
   },
   {
     id: "2",
@@ -40,6 +40,7 @@ const mockConversations: ConversationPreview[] = [
     status: "completed",
     language: "Anglais",
     updatedAt: new Date(Date.now() - 86400000),
+    messagesCount: 32,
   },
   {
     id: "3",
@@ -48,19 +49,17 @@ const mockConversations: ConversationPreview[] = [
     status: "archived",
     language: "Français",
     updatedAt: new Date(Date.now() - 172800000),
+    messagesCount: 18,
   },
 ];
 
-const stats = [
-  { label: "Conversations", value: "12", icon: MessageSquare, color: "text-primary" },
-  { label: "Heures pratiquées", value: "8.5", icon: Clock, color: "text-accent" },
-  { label: "Progression", value: "+15%", icon: TrendingUp, color: "text-success" },
-  { label: "Mots appris", value: "234", icon: BookOpen, color: "text-primary" },
-];
-
 export default function Dashboard() {
-  const [selectedLanguage] = useState("Français");
   const [showNewConversation, setShowNewConversation] = useState(false);
+
+  // Stats basées sur les conversations
+  const totalConversations = mockConversations.length;
+  const activeConversations = mockConversations.filter(c => c.status === "active").length;
+  const totalMessages = mockConversations.reduce((acc, c) => acc + c.messagesCount, 0);
 
   const getStatusIcon = (status: ConversationPreview["status"]) => {
     switch (status) {
@@ -89,33 +88,52 @@ export default function Dashboard() {
             Bonjour ! 👋
           </h2>
           <p className="text-muted-foreground">
-            Continuez votre apprentissage du {selectedLanguage}.
+            Pratiquez vos langues avec votre coach IA.
           </p>
         </motion.div>
 
-        {/* Stats grid */}
+        {/* Simple stats */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, delay: 0.1 }}
-          className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8"
+          className="grid grid-cols-3 gap-4 mb-8"
         >
-          {stats.map((stat) => (
-            <div
-              key={stat.label}
-              className="bg-card rounded-2xl p-4 shadow-card"
-            >
-              <div className="flex items-center gap-3 mb-2">
-                <div className={cn("p-2 rounded-xl bg-muted", stat.color)}>
-                  <stat.icon className="w-5 h-5" />
-                </div>
+          <div className="bg-card rounded-2xl p-4 shadow-card">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="p-2 rounded-xl bg-muted text-primary">
+                <MessageSquare className="w-5 h-5" />
               </div>
-              <p className="text-2xl font-display font-bold text-foreground">
-                {stat.value}
-              </p>
-              <p className="text-sm text-muted-foreground">{stat.label}</p>
             </div>
-          ))}
+            <p className="text-2xl font-display font-bold text-foreground">
+              {totalConversations}
+            </p>
+            <p className="text-sm text-muted-foreground">Conversations</p>
+          </div>
+
+          <div className="bg-card rounded-2xl p-4 shadow-card">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="p-2 rounded-xl bg-muted text-success">
+                <CheckCircle className="w-5 h-5" />
+              </div>
+            </div>
+            <p className="text-2xl font-display font-bold text-foreground">
+              {activeConversations}
+            </p>
+            <p className="text-sm text-muted-foreground">En cours</p>
+          </div>
+
+          <div className="bg-card rounded-2xl p-4 shadow-card">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="p-2 rounded-xl bg-muted text-accent">
+                <Clock className="w-5 h-5" />
+              </div>
+            </div>
+            <p className="text-2xl font-display font-bold text-foreground">
+              {totalMessages}
+            </p>
+            <p className="text-sm text-muted-foreground">Messages</p>
+          </div>
         </motion.div>
 
         {/* New conversation CTA */}
@@ -176,7 +194,10 @@ export default function Dashboard() {
               >
                 <Link
                   to={`/chat/${conversation.id}`}
-                  className="block bg-card rounded-2xl p-4 shadow-card hover:shadow-card-lg transition-all group"
+                  className={cn(
+                    "block bg-card rounded-2xl p-4 shadow-card hover:shadow-card-lg transition-all group",
+                    conversation.status === "archived" && "opacity-60"
+                  )}
                 >
                   <div className="flex items-start justify-between">
                     <div className="flex-1 min-w-0">
@@ -192,6 +213,12 @@ export default function Dashboard() {
                       <div className="flex items-center gap-2">
                         <span className="text-xs px-2 py-0.5 bg-secondary text-secondary-foreground rounded-full">
                           {conversation.language}
+                        </span>
+                        <span className="text-xs text-muted-foreground">
+                          {conversation.messagesCount} messages
+                        </span>
+                        <span className="text-xs text-muted-foreground">
+                          •
                         </span>
                         <span className="text-xs text-muted-foreground">
                           {conversation.updatedAt.toLocaleDateString("fr-FR")}
