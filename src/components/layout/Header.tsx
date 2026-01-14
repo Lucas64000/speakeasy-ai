@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import { Moon, Sun } from "lucide-react";
+import { Moon, Sun, Activity } from "lucide-react";
 import { useTheme } from "@/hooks/use-theme";
 import { cn } from "@/lib/utils";
 
@@ -41,6 +41,18 @@ export function Header() {
                 )}
               >
                 Historique
+              </Link>
+              <Link
+                to="/metrics"
+                className={cn(
+                  "px-3 py-2 text-sm font-medium transition-colors rounded-lg flex items-center gap-1.5",
+                  isActive("/metrics")
+                    ? "text-foreground bg-muted"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                <Activity className="w-4 h-4" />
+                Metrics
               </Link>
             </nav>
             
