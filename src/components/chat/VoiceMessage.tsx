@@ -23,8 +23,18 @@ export function VoiceMessage({
   const [showTranscript, setShowTranscript] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
   const progressRef = useRef<HTMLDivElement>(null);
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
   const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
+
+  // Nettoyage de l'intervalle
+  useEffect(() => {
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     const audio = audioRef.current;
@@ -47,6 +57,34 @@ export function VoiceMessage({
 
   const togglePlay = () => {
     const audio = audioRef.current;
+    
+    // Si pas d'URL audio, simuler la lecture
+    if (!audioUrl) {
+      if (isPlaying) {
+        if (intervalRef.current) {
+          clearInterval(intervalRef.current);
+          intervalRef.current = null;
+        }
+        setIsPlaying(false);
+      } else {
+        setIsPlaying(true);
+        intervalRef.current = setInterval(() => {
+          setCurrentTime((prev) => {
+            if (prev >= duration) {
+              if (intervalRef.current) {
+                clearInterval(intervalRef.current);
+                intervalRef.current = null;
+              }
+              setIsPlaying(false);
+              return 0;
+            }
+            return prev + 0.1;
+          });
+        }, 100);
+      }
+      return;
+    }
+
     if (!audio) return;
 
     if (isPlaying) {
@@ -58,14 +96,16 @@ export function VoiceMessage({
   };
 
   const handleProgressClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    const audio = audioRef.current;
     const progressBar = progressRef.current;
-    if (!audio || !progressBar) return;
+    if (!progressBar) return;
 
     const rect = progressBar.getBoundingClientRect();
     const clickPosition = (e.clientX - rect.left) / rect.width;
-    const newTime = clickPosition * duration;
-    audio.currentTime = newTime;
+    const newTime = Math.max(0, Math.min(clickPosition * duration, duration));
+    
+    if (audioRef.current && audioUrl) {
+      audioRef.current.currentTime = newTime;
+    }
     setCurrentTime(newTime);
   };
 

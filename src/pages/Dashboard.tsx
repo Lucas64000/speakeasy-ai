@@ -6,12 +6,15 @@ import {
   ChevronRight,
   Plus,
   CheckCircle,
-  Archive
+  Archive,
+  Filter
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { Header } from "@/components/layout/Header";
 import { NewConversationDialog } from "@/components/conversation/NewConversationDialog";
+
+type StatusFilter = "all" | "active" | "completed" | "archived";
 
 interface ConversationPreview {
   id: string;
@@ -51,12 +54,34 @@ const mockConversations: ConversationPreview[] = [
     updatedAt: new Date(Date.now() - 172800000),
     messagesCount: 18,
   },
+  {
+    id: "4",
+    title: "Shopping vocabulary",
+    lastMessage: "Excellent use of comparatives!",
+    status: "completed",
+    language: "Anglais",
+    updatedAt: new Date(Date.now() - 259200000),
+    messagesCount: 15,
+  },
+];
+
+const filterOptions: { value: StatusFilter; label: string }[] = [
+  { value: "all", label: "Toutes" },
+  { value: "active", label: "En cours" },
+  { value: "completed", label: "Terminées" },
+  { value: "archived", label: "Archivées" },
 ];
 
 export default function Dashboard() {
   const [showNewConversation, setShowNewConversation] = useState(false);
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
 
-  // Stats basées sur les conversations
+  // Filtrer les conversations
+  const filteredConversations = statusFilter === "all" 
+    ? mockConversations 
+    : mockConversations.filter(c => c.status === statusFilter);
+
+  // Stats basées sur toutes les conversations
   const totalConversations = mockConversations.length;
   const activeConversations = mockConversations.filter(c => c.status === "active").length;
   const totalMessages = mockConversations.reduce((acc, c) => acc + c.messagesCount, 0);
@@ -184,8 +209,30 @@ export default function Dashboard() {
             </Link>
           </div>
 
+          {/* Status filter */}
+          <div className="flex items-center gap-2 mb-4 overflow-x-auto pb-2">
+            {filterOptions.map((option) => (
+              <button
+                key={option.value}
+                onClick={() => setStatusFilter(option.value)}
+                className={cn(
+                  "px-3 py-1.5 rounded-full text-sm font-medium transition-all whitespace-nowrap",
+                  statusFilter === option.value
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-muted text-muted-foreground hover:bg-muted/80"
+                )}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
+
           <div className="space-y-3">
-            {mockConversations.map((conversation, index) => (
+            {filteredConversations.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                Aucune conversation {statusFilter !== "all" ? `${filterOptions.find(f => f.value === statusFilter)?.label.toLowerCase()}` : ""}
+              </div>
+            ) : filteredConversations.map((conversation, index) => (
               <motion.div
                 key={conversation.id}
                 initial={{ opacity: 0, x: -20 }}
@@ -233,7 +280,6 @@ export default function Dashboard() {
           </div>
         </motion.div>
       </main>
-
       <NewConversationDialog 
         open={showNewConversation} 
         onOpenChange={setShowNewConversation} 
