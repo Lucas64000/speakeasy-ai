@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { 
   X, 
   ArrowRight, 
@@ -7,7 +7,9 @@ import {
   Copy, 
   Check, 
   ThumbsUp, 
-  ThumbsDown 
+  ThumbsDown,
+  MessageSquare,
+  Send 
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -36,6 +38,9 @@ export function FeedbackPanel({
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
   const [rating, setRating] = useState<"up" | "down" | null>(null);
   const [showThanks, setShowThanks] = useState(false);
+  const [showCommentField, setShowCommentField] = useState(false);
+  const [comment, setComment] = useState("");
+  const [commentSubmitted, setCommentSubmitted] = useState(false);
 
   if (!isOpen) return null;
 
@@ -47,8 +52,25 @@ export function FeedbackPanel({
 
   const handleRating = (value: "up" | "down") => {
     setRating(value);
-    setShowThanks(true);
-    setTimeout(() => setShowThanks(false), 2000);
+    if (value === "down") {
+      setShowCommentField(true);
+    } else {
+      setShowThanks(true);
+      setTimeout(() => setShowThanks(false), 2000);
+    }
+  };
+
+  const handleSubmitComment = () => {
+    if (comment.trim()) {
+      // Ici on enverrait le feedback au backend
+      console.log("Feedback submitted:", { rating, comment });
+      setCommentSubmitted(true);
+      setTimeout(() => {
+        setShowCommentField(false);
+        setCommentSubmitted(false);
+        setComment("");
+      }, 2000);
+    }
   };
 
   const corrections = feedback.filter(f => f.type === "correction" || f.type === "error");
@@ -170,50 +192,104 @@ export function FeedbackPanel({
           </motion.div>
         )}
 
-        {/* Rating section */}
+        {/* Rating section with comment */}
         {feedback.length > 0 && (
-          <div className="pt-3 border-t border-border">
+          <div className="pt-3 border-t border-border space-y-3">
             <div className="flex items-center justify-between">
               <span className="text-xs text-muted-foreground">
                 Ce feedback est-il utile ?
               </span>
               <div className="flex items-center gap-1">
-                {showThanks ? (
-                  <motion.span
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    className="text-xs text-success font-medium"
-                  >
-                    Merci !
-                  </motion.span>
-                ) : (
-                  <>
-                    <button
-                      onClick={() => handleRating("up")}
-                      className={cn(
-                        "w-7 h-7 rounded-md flex items-center justify-center transition-all",
-                        rating === "up" 
-                          ? "bg-success/20 text-success" 
-                          : "hover:bg-muted text-muted-foreground hover:text-foreground"
-                      )}
+                <AnimatePresence mode="wait">
+                  {showThanks ? (
+                    <motion.span
+                      key="thanks"
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.8 }}
+                      className="text-xs text-success font-medium"
                     >
-                      <ThumbsUp className="w-3.5 h-3.5" />
-                    </button>
-                    <button
-                      onClick={() => handleRating("down")}
-                      className={cn(
-                        "w-7 h-7 rounded-md flex items-center justify-center transition-all",
-                        rating === "down" 
-                          ? "bg-destructive/20 text-destructive" 
-                          : "hover:bg-muted text-muted-foreground hover:text-foreground"
-                      )}
-                    >
-                      <ThumbsDown className="w-3.5 h-3.5" />
-                    </button>
-                  </>
-                )}
+                      Merci !
+                    </motion.span>
+                  ) : (
+                    <motion.div key="buttons" className="flex items-center gap-1">
+                      <button
+                        onClick={() => handleRating("up")}
+                        className={cn(
+                          "w-7 h-7 rounded-md flex items-center justify-center transition-all",
+                          rating === "up" 
+                            ? "bg-success/20 text-success" 
+                            : "hover:bg-muted text-muted-foreground hover:text-foreground"
+                        )}
+                      >
+                        <ThumbsUp className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        onClick={() => handleRating("down")}
+                        className={cn(
+                          "w-7 h-7 rounded-md flex items-center justify-center transition-all",
+                          rating === "down" 
+                            ? "bg-destructive/20 text-destructive" 
+                            : "hover:bg-muted text-muted-foreground hover:text-foreground"
+                        )}
+                      >
+                        <ThumbsDown className="w-3.5 h-3.5" />
+                      </button>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
             </div>
+
+            {/* Comment field */}
+            <AnimatePresence>
+              {showCommentField && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="overflow-hidden"
+                >
+                  {commentSubmitted ? (
+                    <motion.div 
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      className="flex items-center gap-2 text-xs text-success py-2"
+                    >
+                      <Check className="w-3.5 h-3.5" />
+                      <span>Merci pour ton retour !</span>
+                    </motion.div>
+                  ) : (
+                    <div className="space-y-2">
+                      <div className="flex items-start gap-2">
+                        <MessageSquare className="w-3.5 h-3.5 text-muted-foreground mt-2 flex-shrink-0" />
+                        <textarea
+                          value={comment}
+                          onChange={(e) => setComment(e.target.value)}
+                          placeholder="Qu'est-ce qui pourrait être amélioré ?"
+                          className="flex-1 bg-muted rounded-lg px-3 py-2 text-xs placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 resize-none h-16"
+                        />
+                      </div>
+                      <div className="flex justify-end">
+                        <button
+                          onClick={handleSubmitComment}
+                          disabled={!comment.trim()}
+                          className={cn(
+                            "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all",
+                            comment.trim()
+                              ? "bg-primary text-primary-foreground hover:bg-primary/90"
+                              : "bg-muted text-muted-foreground cursor-not-allowed"
+                          )}
+                        >
+                          <Send className="w-3 h-3" />
+                          Envoyer
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         )}
       </div>
