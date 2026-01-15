@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
-import { X, MessageSquare, Globe, Mic2, Sparkles } from "lucide-react";
+import { motion } from "framer-motion";
+import { MessageSquare, Globe, Mic2, Sparkles, Brain, ChevronDown, ChevronUp } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -16,6 +16,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
+import { ModelSelector, ModelConfig, defaultModelConfig } from "./ModelSelector";
 
 interface NewConversationDialogProps {
   open: boolean;
@@ -73,10 +74,12 @@ export function NewConversationDialog({ open, onOpenChange }: NewConversationDia
   const [coachTone, setCoachTone] = useState("friendly");
   const [context, setContext] = useState("");
   const [enableAudio, setEnableAudio] = useState(true);
+  const [modelConfig, setModelConfig] = useState<ModelConfig>(defaultModelConfig);
+  const [showAdvanced, setShowAdvanced] = useState(false);
 
   const handleStart = () => {
     // Dans une vraie app, on enverrait ces données au backend
-    console.log({ language, coachTone, context, enableAudio });
+    console.log({ language, coachTone, context, enableAudio, modelConfig });
     onOpenChange(false);
     navigate("/chat/new");
   };
@@ -87,7 +90,7 @@ export function NewConversationDialog({ open, onOpenChange }: NewConversationDia
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px] p-0 gap-0 overflow-hidden bg-card">
+      <DialogContent className="sm:max-w-[500px] p-0 gap-0 overflow-hidden bg-card max-h-[90vh] overflow-y-auto">
         <DialogHeader className="p-6 pb-4 bg-gradient-to-br from-primary/10 to-primary/5">
           <DialogTitle className="font-display text-xl flex items-center gap-2">
             <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
@@ -204,6 +207,36 @@ export function NewConversationDialog({ open, onOpenChange }: NewConversationDia
                 transition={{ type: "spring", stiffness: 500, damping: 30 }}
               />
             </button>
+          </div>
+
+          {/* Advanced settings - Model selection */}
+          <div className="space-y-3">
+            <button
+              onClick={() => setShowAdvanced(!showAdvanced)}
+              className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors w-full"
+            >
+              <Brain className="w-4 h-4" />
+              <span>Paramètres avancés</span>
+              {showAdvanced ? (
+                <ChevronUp className="w-4 h-4 ml-auto" />
+              ) : (
+                <ChevronDown className="w-4 h-4 ml-auto" />
+              )}
+            </button>
+            
+            {showAdvanced && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                className="pt-2"
+              >
+                <ModelSelector
+                  config={modelConfig}
+                  onChange={setModelConfig}
+                />
+              </motion.div>
+            )}
           </div>
         </div>
 

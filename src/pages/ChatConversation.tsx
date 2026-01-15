@@ -1,10 +1,13 @@
-import { useState } from "react";
-import { ArrowLeft, Volume2, VolumeX } from "lucide-react";
+import { useState, useMemo } from "react";
+import { ArrowLeft, Volume2, VolumeX, PanelRightClose, PanelRight } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { ChatMessage } from "@/components/chat/ChatMessage";
 import { ChatInput } from "@/components/chat/ChatInput";
 import { ConversationStatusMenu } from "@/components/conversation/ConversationStatusMenu";
+import { ConversationSidebar } from "@/components/conversation/ConversationSidebar";
+import { ModelConfig, defaultModelConfig } from "@/components/conversation/ModelSelector";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 
 type ConversationStatus = "active" | "completed" | "archived";
 
@@ -69,11 +72,12 @@ const mockMessages = [
   },
 ];
 
-// Ces infos viendraient du contexte de création de conversation
 const conversationInfo = {
   title: "Conversation au restaurant",
   language: "Français",
+  languageFlag: "🇫🇷",
   coachTone: "Amical",
+  coachToneIcon: "😊",
 };
 
 export default function ChatConversation() {
@@ -81,6 +85,34 @@ export default function ChatConversation() {
   const [messages, setMessages] = useState(mockMessages);
   const [audioEnabled, setAudioEnabled] = useState(true);
   const [status, setStatus] = useState<ConversationStatus>("active");
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [modelConfig, setModelConfig] = useState<ModelConfig>(defaultModelConfig);
+
+  // Compute session stats from messages
+  const sessionStats = useMemo(() => {
+    const voiceMessages = messages.filter(m => m.type === "voice" && m.isUser);
+    const userMessages = messages.filter(m => m.isUser);
+    const corrections = messages.reduce((acc, m) => {
+      if ('feedbackItems' in m && m.feedbackItems) {
+        return acc + m.feedbackItems.filter(f => f.type === "correction").length;
+      }
+      return acc;
+    }, 0);
+    const suggestions = messages.reduce((acc, m) => {
+      if ('feedbackItems' in m && m.feedbackItems) {
+        return acc + m.feedbackItems.filter(f => f.type === "suggestion").length;
+      }
+      return acc;
+    }, 0);
+
+    return {
+      messagesCount: userMessages.length,
+      voiceMessagesCount: voiceMessages.length,
+      duration: 5, // Mock duration
+      correctionsCount: corrections,
+      suggestionsCount: suggestions,
+    };
+  }, [messages]);
 
   const handleSendMessage = (content: string) => {
     const newMessage = {
@@ -148,82 +180,118 @@ export default function ChatConversation() {
   };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
-      {/* Header */}
-      <header className="bg-card border-b border-border sticky top-0 z-10">
-        <div className="max-w-3xl mx-auto px-4 py-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <Link
-                to="/"
-                className="w-9 h-9 rounded-full bg-muted hover:bg-muted/80 flex items-center justify-center transition-colors"
-              >
-                <ArrowLeft className="w-5 h-5 text-muted-foreground" />
-              </Link>
-              <div>
-                <div className="flex items-center gap-2">
-                  <h1 className="font-display font-semibold text-foreground">
-                    {conversationInfo.title}
-                  </h1>
-                  {getStatusBadge()}
+    <div className="min-h-screen bg-background flex">
+      {/* Main content */}
+      <div className="flex-1 flex flex-col min-w-0">
+        {/* Header */}
+        <header className="bg-card border-b border-border sticky top-0 z-10">
+          <div className={cn(
+            "px-4 py-3 transition-all",
+            sidebarOpen ? "max-w-3xl" : "max-w-4xl mx-auto"
+          )}>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Link
+                  to="/"
+                  className="w-9 h-9 rounded-full bg-muted hover:bg-muted/80 flex items-center justify-center transition-colors"
+                >
+                  <ArrowLeft className="w-5 h-5 text-muted-foreground" />
+                </Link>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h1 className="font-display font-semibold text-foreground">
+                      {conversationInfo.title}
+                    </h1>
+                    {getStatusBadge()}
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    {conversationInfo.language} • Coach {conversationInfo.coachTone.toLowerCase()} • {modelConfig.textModel}
+                  </p>
                 </div>
-                <p className="text-xs text-muted-foreground">
-                  {conversationInfo.language} • Coach {conversationInfo.coachTone.toLowerCase()}
-                </p>
+              </div>
+
+              <div className="flex items-center gap-2">
+                {/* Audio toggle */}
+                <button
+                  onClick={() => setAudioEnabled(!audioEnabled)}
+                  className="w-9 h-9 rounded-full bg-muted hover:bg-muted/80 flex items-center justify-center transition-colors"
+                  title={audioEnabled ? "Désactiver l'audio" : "Activer l'audio"}
+                >
+                  {audioEnabled ? (
+                    <Volume2 className="w-5 h-5 text-primary" />
+                  ) : (
+                    <VolumeX className="w-5 h-5 text-muted-foreground" />
+                  )}
+                </button>
+
+                {/* Sidebar toggle */}
+                <button
+                  onClick={() => setSidebarOpen(!sidebarOpen)}
+                  className="w-9 h-9 rounded-full bg-muted hover:bg-muted/80 flex items-center justify-center transition-colors"
+                  title={sidebarOpen ? "Masquer le panneau" : "Afficher le panneau"}
+                >
+                  {sidebarOpen ? (
+                    <PanelRightClose className="w-5 h-5 text-muted-foreground" />
+                  ) : (
+                    <PanelRight className="w-5 h-5 text-muted-foreground" />
+                  )}
+                </button>
+
+                {/* Status menu */}
+                <ConversationStatusMenu
+                  currentStatus={status}
+                  onStatusChange={handleStatusChange}
+                  onDelete={handleDelete}
+                />
               </div>
             </div>
+          </div>
+        </header>
 
-            <div className="flex items-center gap-2">
-              {/* Audio toggle */}
-              <button
-                onClick={() => setAudioEnabled(!audioEnabled)}
-                className="w-9 h-9 rounded-full bg-muted hover:bg-muted/80 flex items-center justify-center transition-colors"
-              >
-                {audioEnabled ? (
-                  <Volume2 className="w-5 h-5 text-primary" />
-                ) : (
-                  <VolumeX className="w-5 h-5 text-muted-foreground" />
-                )}
-              </button>
-
-              {/* Status menu */}
-              <ConversationStatusMenu
-                currentStatus={status}
-                onStatusChange={handleStatusChange}
-                onDelete={handleDelete}
-              />
+        {/* Messages */}
+        <main className="flex-1 overflow-y-auto">
+          <div className={cn(
+            "px-4 py-6 transition-all",
+            sidebarOpen ? "max-w-3xl" : "max-w-4xl mx-auto"
+          )}>
+            <div className="space-y-4">
+              {messages.map((message) => (
+                <ChatMessage
+                  key={message.id}
+                  {...message}
+                />
+              ))}
             </div>
           </div>
-        </div>
-      </header>
+        </main>
 
-      {/* Messages */}
-      <main className="flex-1 overflow-y-auto">
-        <div className="max-w-3xl mx-auto px-4 py-6">
-          <div className="space-y-4">
-            {messages.map((message) => (
-              <ChatMessage
-                key={message.id}
-                {...message}
-              />
-            ))}
+        {/* Input - disabled if archived */}
+        {status !== "archived" ? (
+          <ChatInput
+            onSendMessage={handleSendMessage}
+            onSendVoice={handleSendVoice}
+            placeholder="Tapez ou envoyez un vocal..."
+          />
+        ) : (
+          <div className="bg-card border-t border-border p-4">
+            <div className={cn(
+              "text-center text-sm text-muted-foreground transition-all",
+              sidebarOpen ? "max-w-3xl" : "max-w-4xl mx-auto"
+            )}>
+              Cette conversation est archivée. Changez le statut pour continuer.
+            </div>
           </div>
-        </div>
-      </main>
+        )}
+      </div>
 
-      {/* Input - disabled if archived */}
-      {status !== "archived" ? (
-        <ChatInput
-          onSendMessage={handleSendMessage}
-          onSendVoice={handleSendVoice}
-          placeholder="Tapez ou envoyez un vocal..."
+      {/* Sidebar */}
+      {sidebarOpen && (
+        <ConversationSidebar
+          conversationInfo={conversationInfo}
+          stats={sessionStats}
+          modelConfig={modelConfig}
+          onModelChange={setModelConfig}
         />
-      ) : (
-        <div className="bg-card border-t border-border p-4">
-          <div className="max-w-3xl mx-auto text-center text-sm text-muted-foreground">
-            Cette conversation est archivée. Changez le statut pour continuer.
-          </div>
-        </div>
       )}
     </div>
   );
