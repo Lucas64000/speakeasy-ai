@@ -1,15 +1,14 @@
 import { motion } from "framer-motion";
 import { 
-  Globe, 
-  Sparkles, 
   MessageSquare, 
   Mic, 
   Clock, 
   CheckCircle2, 
-  AlertCircle,
-  ChevronRight,
+  Lightbulb,
   Brain,
-  Speaker
+  Volume2,
+  Zap,
+  TrendingUp
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ModelConfig } from "./ModelSelector";
@@ -24,7 +23,7 @@ import {
 interface SessionStats {
   messagesCount: number;
   voiceMessagesCount: number;
-  duration: number; // in minutes
+  duration: number;
   correctionsCount: number;
   suggestionsCount: number;
 }
@@ -46,21 +45,21 @@ interface ConversationSidebarProps {
 }
 
 const textModels = [
-  { value: "gemini-flash", label: "Gemini Flash" },
-  { value: "gemini-pro", label: "Gemini Pro" },
-  { value: "gpt-5-mini", label: "GPT-5 Mini" },
-  { value: "gpt-5", label: "GPT-5" },
+  { value: "gemini-flash", label: "Gemini Flash", speed: "Rapide" },
+  { value: "gemini-pro", label: "Gemini Pro", speed: "Pro" },
+  { value: "gpt-5-mini", label: "GPT-5 Mini", speed: "Rapide" },
+  { value: "gpt-5", label: "GPT-5", speed: "Pro" },
 ];
 
 const sttModels = [
-  { value: "whisper-v3", label: "Whisper v3" },
-  { value: "scribe-realtime", label: "Scribe Realtime" },
+  { value: "whisper-v3", label: "Whisper v3", speed: "Standard" },
+  { value: "scribe-realtime", label: "Scribe Realtime", speed: "Temps réel" },
 ];
 
 const ttsModels = [
-  { value: "elevenlabs-turbo", label: "ElevenLabs Turbo" },
-  { value: "elevenlabs-v2", label: "ElevenLabs v2" },
-  { value: "openai-tts", label: "OpenAI TTS" },
+  { value: "elevenlabs-turbo", label: "ElevenLabs Turbo", speed: "Rapide" },
+  { value: "elevenlabs-v2", label: "ElevenLabs v2", speed: "HD" },
+  { value: "openai-tts", label: "OpenAI TTS", speed: "Standard" },
 ];
 
 export function ConversationSidebar({
@@ -70,111 +69,103 @@ export function ConversationSidebar({
   onModelChange,
   className,
 }: ConversationSidebarProps) {
+  const progressPercent = Math.min((stats.messagesCount / 10) * 100, 100);
+  
   return (
     <motion.aside
       initial={{ opacity: 0, x: 20 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ duration: 0.3, delay: 0.1 }}
       className={cn(
-        "w-72 bg-card border-l border-border h-full overflow-y-auto",
+        "w-80 bg-gradient-to-b from-card to-background border-l border-border h-full overflow-y-auto",
         className
       )}
     >
-      <div className="p-4 space-y-6">
-        {/* Context Info */}
+      <div className="p-5 space-y-6">
+        {/* Context header - Compact and elegant */}
+        <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-primary/5 to-accent/5 rounded-2xl border border-primary/10">
+          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center text-2xl shadow-sm">
+            {conversationInfo.languageFlag}
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="font-semibold text-foreground truncate">{conversationInfo.language}</p>
+            <p className="text-xs text-muted-foreground flex items-center gap-1">
+              <span>{conversationInfo.coachToneIcon}</span>
+              Coach {conversationInfo.coachTone}
+            </p>
+          </div>
+        </div>
+
+        {/* Session Progress */}
         <div className="space-y-3">
-          <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-            Contexte
+          <div className="flex items-center justify-between">
+            <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+              <TrendingUp className="w-3.5 h-3.5" />
+              Progression
+            </h3>
+            <span className="text-xs font-medium text-primary">{stats.duration}min</span>
+          </div>
+          
+          {/* Progress bar */}
+          <div className="h-2 bg-muted rounded-full overflow-hidden">
+            <motion.div 
+              initial={{ width: 0 }}
+              animate={{ width: `${progressPercent}%` }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+              className="h-full bg-gradient-to-r from-primary to-accent rounded-full"
+            />
+          </div>
+          
+          {/* Stats grid - More compact */}
+          <div className="grid grid-cols-4 gap-2">
+            <StatPill
+              icon={<MessageSquare className="w-3.5 h-3.5" />}
+              value={stats.messagesCount}
+              color="primary"
+            />
+            <StatPill
+              icon={<Mic className="w-3.5 h-3.5" />}
+              value={stats.voiceMessagesCount}
+              color="accent"
+            />
+            <StatPill
+              icon={<CheckCircle2 className="w-3.5 h-3.5" />}
+              value={stats.correctionsCount}
+              color={stats.correctionsCount > 0 ? "warning" : "success"}
+            />
+            <StatPill
+              icon={<Lightbulb className="w-3.5 h-3.5" />}
+              value={stats.suggestionsCount}
+              color="muted"
+            />
+          </div>
+        </div>
+
+        {/* Model Selection - Sleek cards */}
+        <div className="space-y-3">
+          <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+            <Zap className="w-3.5 h-3.5" />
+            Configuration IA
           </h3>
           
           <div className="space-y-2">
-            <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-xl">
-              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-lg">
-                {conversationInfo.languageFlag}
-              </div>
-              <div>
-                <p className="text-sm font-medium text-foreground">{conversationInfo.language}</p>
-                <p className="text-xs text-muted-foreground">Langue pratiquée</p>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-xl">
-              <div className="w-10 h-10 rounded-full bg-accent/10 flex items-center justify-center text-lg">
-                {conversationInfo.coachToneIcon}
-              </div>
-              <div>
-                <p className="text-sm font-medium text-foreground">Coach {conversationInfo.coachTone}</p>
-                <p className="text-xs text-muted-foreground">Style d'accompagnement</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Session Stats */}
-        <div className="space-y-3">
-          <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-            Cette session
-          </h3>
-          
-          <div className="grid grid-cols-2 gap-2">
-            <StatCard
-              icon={<MessageSquare className="w-4 h-4" />}
-              value={stats.messagesCount}
-              label="Messages"
-              color="primary"
-            />
-            <StatCard
-              icon={<Mic className="w-4 h-4" />}
-              value={stats.voiceMessagesCount}
-              label="Vocaux"
-              color="accent"
-            />
-            <StatCard
-              icon={<Clock className="w-4 h-4" />}
-              value={`${stats.duration}m`}
-              label="Durée"
-              color="muted"
-            />
-            <StatCard
-              icon={<CheckCircle2 className="w-4 h-4" />}
-              value={stats.correctionsCount}
-              label="Corrections"
-              color={stats.correctionsCount > 0 ? "warning" : "success"}
-            />
-          </div>
-
-          {stats.suggestionsCount > 0 && (
-            <div className="flex items-center gap-2 p-2 bg-accent/10 rounded-lg text-xs text-accent-foreground">
-              <AlertCircle className="w-3.5 h-3.5 text-accent" />
-              <span>{stats.suggestionsCount} suggestions d'amélioration</span>
-            </div>
-          )}
-        </div>
-
-        {/* Model Selection */}
-        <div className="space-y-3">
-          <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-            Modèles IA
-          </h3>
-          
-          <div className="space-y-3">
-            <ModelSelect
-              icon={<Brain className="w-3.5 h-3.5" />}
-              label="Texte"
+            <ModelCard
+              icon={<Brain className="w-4 h-4" />}
+              label="Modèle texte"
               value={modelConfig.textModel}
               options={textModels}
               onChange={(v) => onModelChange({ ...modelConfig, textModel: v })}
             />
-            <ModelSelect
-              icon={<Mic className="w-3.5 h-3.5" />}
-              label="STT"
+            <ModelCard
+              icon={<Mic className="w-4 h-4" />}
+              label="Reconnaissance vocale"
               value={modelConfig.sttModel}
               options={sttModels}
               onChange={(v) => onModelChange({ ...modelConfig, sttModel: v })}
             />
-            <ModelSelect
-              icon={<Speaker className="w-3.5 h-3.5" />}
-              label="TTS"
+            <ModelCard
+              icon={<Volume2 className="w-4 h-4" />}
+              label="Synthèse vocale"
               value={modelConfig.ttsModel}
               options={ttsModels}
               onChange={(v) => onModelChange({ ...modelConfig, ttsModel: v })}
@@ -182,58 +173,46 @@ export function ConversationSidebar({
           </div>
         </div>
 
-        {/* Quick tips */}
-        <div className="space-y-3">
-          <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-            Astuces
-          </h3>
-          <div className="space-y-2 text-xs text-muted-foreground">
-            <p className="flex items-start gap-2">
-              <ChevronRight className="w-3 h-3 mt-0.5 text-primary flex-shrink-0" />
-              Clique sur un message pour voir le feedback détaillé
-            </p>
-            <p className="flex items-start gap-2">
-              <ChevronRight className="w-3 h-3 mt-0.5 text-primary flex-shrink-0" />
-              Maintiens le micro pour enregistrer un message vocal
-            </p>
-          </div>
+        {/* Tips - Inline and subtle */}
+        <div className="p-3 bg-muted/30 rounded-xl border border-border/50">
+          <p className="text-xs text-muted-foreground leading-relaxed">
+            💡 <span className="font-medium text-foreground/80">Astuce :</span> Clique sur "Feedback" sous tes messages pour voir les corrections détaillées.
+          </p>
         </div>
       </div>
     </motion.aside>
   );
 }
 
-function StatCard({
+function StatPill({
   icon,
   value,
-  label,
   color,
 }: {
   icon: React.ReactNode;
   value: number | string;
-  label: string;
   color: "primary" | "accent" | "muted" | "warning" | "success";
 }) {
   const colorClasses = {
-    primary: "bg-primary/10 text-primary",
-    accent: "bg-accent/10 text-accent",
-    muted: "bg-muted text-muted-foreground",
-    warning: "bg-warning/10 text-warning",
-    success: "bg-success/10 text-success",
+    primary: "bg-primary/10 text-primary border-primary/20",
+    accent: "bg-accent/10 text-accent border-accent/20",
+    muted: "bg-muted text-muted-foreground border-border",
+    warning: "bg-warning/10 text-warning border-warning/20",
+    success: "bg-success/10 text-success border-success/20",
   };
 
   return (
-    <div className="p-3 bg-muted/30 rounded-xl">
-      <div className={cn("w-8 h-8 rounded-lg flex items-center justify-center mb-2", colorClasses[color])}>
-        {icon}
-      </div>
-      <p className="text-lg font-semibold text-foreground">{value}</p>
-      <p className="text-xs text-muted-foreground">{label}</p>
+    <div className={cn(
+      "flex flex-col items-center justify-center py-2 rounded-xl border",
+      colorClasses[color]
+    )}>
+      {icon}
+      <span className="text-sm font-bold mt-1">{value}</span>
     </div>
   );
 }
 
-function ModelSelect({
+function ModelCard({
   icon,
   label,
   value,
@@ -243,23 +222,35 @@ function ModelSelect({
   icon: React.ReactNode;
   label: string;
   value: string;
-  options: { value: string; label: string }[];
+  options: { value: string; label: string; speed: string }[];
   onChange: (value: string) => void;
 }) {
+  const selectedOption = options.find(o => o.value === value);
+  
   return (
-    <div className="flex items-center gap-2">
-      <div className="flex items-center gap-1.5 text-muted-foreground w-12 flex-shrink-0">
-        {icon}
-        <span className="text-xs">{label}</span>
+    <div className="group p-3 bg-muted/30 hover:bg-muted/50 rounded-xl border border-border/50 hover:border-border transition-all">
+      <div className="flex items-center gap-2 mb-2">
+        <div className="w-6 h-6 rounded-lg bg-background flex items-center justify-center text-muted-foreground group-hover:text-foreground transition-colors">
+          {icon}
+        </div>
+        <span className="text-xs text-muted-foreground">{label}</span>
+        {selectedOption && (
+          <span className="ml-auto text-[10px] px-1.5 py-0.5 rounded-full bg-primary/10 text-primary font-medium">
+            {selectedOption.speed}
+          </span>
+        )}
       </div>
       <Select value={value} onValueChange={onChange}>
-        <SelectTrigger className="h-8 text-xs flex-1">
+        <SelectTrigger className="h-8 text-xs bg-background border-border/50">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
           {options.map((opt) => (
             <SelectItem key={opt.value} value={opt.value} className="text-xs">
-              {opt.label}
+              <div className="flex items-center justify-between w-full gap-3">
+                <span>{opt.label}</span>
+                <span className="text-[10px] text-muted-foreground">{opt.speed}</span>
+              </div>
             </SelectItem>
           ))}
         </SelectContent>
