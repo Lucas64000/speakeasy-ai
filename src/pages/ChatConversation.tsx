@@ -1,10 +1,11 @@
 import { useState, useMemo } from "react";
-import { ArrowLeft, Volume2, VolumeX, PanelRightClose, PanelRight } from "lucide-react";
+import { ArrowLeft, Volume2, VolumeX } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { ChatMessage } from "@/components/chat/ChatMessage";
 import { ChatInput } from "@/components/chat/ChatInput";
 import { ConversationStatusMenu } from "@/components/conversation/ConversationStatusMenu";
-import { ConversationSidebar } from "@/components/conversation/ConversationSidebar";
+import { HistorySidebar } from "@/components/chat/HistorySidebar";
+import { ModelConfigPopover } from "@/components/chat/ModelConfigPopover";
 import { ModelConfig, defaultModelConfig } from "@/components/conversation/ModelSelector";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -85,7 +86,7 @@ export default function ChatConversation() {
   const [messages, setMessages] = useState(mockMessages);
   const [audioEnabled, setAudioEnabled] = useState(true);
   const [status, setStatus] = useState<ConversationStatus>("active");
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [modelConfig, setModelConfig] = useState<ModelConfig>(defaultModelConfig);
 
   // Compute session stats from messages
@@ -180,37 +181,57 @@ export default function ChatConversation() {
   };
 
   return (
-    <div className="min-h-screen bg-background flex">
+    <div className="min-h-screen bg-background flex w-full">
+      {/* History sidebar on the left */}
+      <HistorySidebar
+        collapsed={sidebarCollapsed}
+        onCollapsedChange={setSidebarCollapsed}
+      />
+
       {/* Main content */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Header */}
-        <header className="bg-card border-b border-border sticky top-0 z-10">
-          <div className={cn(
-            "px-4 py-3 transition-all",
-            sidebarOpen ? "max-w-3xl" : "max-w-4xl mx-auto"
-          )}>
-            <div className="flex items-center justify-between">
+        <header className="bg-card/80 backdrop-blur-sm border-b border-border sticky top-0 z-10">
+          <div className="px-4 lg:px-6 py-3">
+            <div className="flex items-center justify-between max-w-4xl mx-auto">
               <div className="flex items-center gap-3">
                 <Link
                   to="/"
-                  className="w-9 h-9 rounded-full bg-muted hover:bg-muted/80 flex items-center justify-center transition-colors"
+                  className="w-9 h-9 rounded-full bg-muted hover:bg-muted/80 flex items-center justify-center transition-colors lg:hidden"
                 >
                   <ArrowLeft className="w-5 h-5 text-muted-foreground" />
                 </Link>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <h1 className="font-display font-semibold text-foreground">
-                      {conversationInfo.title}
-                    </h1>
-                    {getStatusBadge()}
+                
+                {/* Conversation context */}
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center text-xl">
+                    {conversationInfo.languageFlag}
                   </div>
-                  <p className="text-xs text-muted-foreground">
-                    {conversationInfo.language} • Coach {conversationInfo.coachTone.toLowerCase()} • {modelConfig.textModel}
-                  </p>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h1 className="font-display font-semibold text-foreground">
+                        {conversationInfo.title}
+                      </h1>
+                      {getStatusBadge()}
+                    </div>
+                    <p className="text-xs text-muted-foreground flex items-center gap-1.5">
+                      <span>{conversationInfo.language}</span>
+                      <span>•</span>
+                      <span className="flex items-center gap-0.5">
+                        {conversationInfo.coachToneIcon} {conversationInfo.coachTone}
+                      </span>
+                    </p>
+                  </div>
                 </div>
               </div>
 
               <div className="flex items-center gap-2">
+                {/* Model config popover */}
+                <ModelConfigPopover
+                  config={modelConfig}
+                  onChange={setModelConfig}
+                />
+
                 {/* Audio toggle */}
                 <button
                   onClick={() => setAudioEnabled(!audioEnabled)}
@@ -221,19 +242,6 @@ export default function ChatConversation() {
                     <Volume2 className="w-5 h-5 text-primary" />
                   ) : (
                     <VolumeX className="w-5 h-5 text-muted-foreground" />
-                  )}
-                </button>
-
-                {/* Sidebar toggle */}
-                <button
-                  onClick={() => setSidebarOpen(!sidebarOpen)}
-                  className="w-9 h-9 rounded-full bg-muted hover:bg-muted/80 flex items-center justify-center transition-colors"
-                  title={sidebarOpen ? "Masquer le panneau" : "Afficher le panneau"}
-                >
-                  {sidebarOpen ? (
-                    <PanelRightClose className="w-5 h-5 text-muted-foreground" />
-                  ) : (
-                    <PanelRight className="w-5 h-5 text-muted-foreground" />
                   )}
                 </button>
 
@@ -250,10 +258,7 @@ export default function ChatConversation() {
 
         {/* Messages */}
         <main className="flex-1 overflow-y-auto">
-          <div className={cn(
-            "px-4 py-6 transition-all",
-            sidebarOpen ? "max-w-3xl" : "max-w-4xl mx-auto"
-          )}>
+          <div className="px-4 lg:px-6 py-6 max-w-4xl mx-auto">
             <div className="space-y-4">
               {messages.map((message) => (
                 <ChatMessage
@@ -267,32 +272,23 @@ export default function ChatConversation() {
 
         {/* Input - disabled if archived */}
         {status !== "archived" ? (
-          <ChatInput
-            onSendMessage={handleSendMessage}
-            onSendVoice={handleSendVoice}
-            placeholder="Tapez ou envoyez un vocal..."
-          />
+          <div className="border-t border-border bg-card/80 backdrop-blur-sm">
+            <div className="max-w-4xl mx-auto">
+              <ChatInput
+                onSendMessage={handleSendMessage}
+                onSendVoice={handleSendVoice}
+                placeholder="Tapez ou envoyez un vocal..."
+              />
+            </div>
+          </div>
         ) : (
           <div className="bg-card border-t border-border p-4">
-            <div className={cn(
-              "text-center text-sm text-muted-foreground transition-all",
-              sidebarOpen ? "max-w-3xl" : "max-w-4xl mx-auto"
-            )}>
+            <div className="text-center text-sm text-muted-foreground max-w-4xl mx-auto">
               Cette conversation est archivée. Changez le statut pour continuer.
             </div>
           </div>
         )}
       </div>
-
-      {/* Sidebar */}
-      {sidebarOpen && (
-        <ConversationSidebar
-          conversationInfo={conversationInfo}
-          stats={sessionStats}
-          modelConfig={modelConfig}
-          onModelChange={setModelConfig}
-        />
-      )}
     </div>
   );
 }
