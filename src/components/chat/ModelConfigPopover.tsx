@@ -23,10 +23,10 @@ interface ModelConfigPopoverProps {
 }
 
 const textModels = [
-  { value: "gemini-flash", label: "Gemini Flash", speed: "Rapide", icon: "⚡" },
-  { value: "gemini-pro", label: "Gemini Pro", speed: "Pro", icon: "🔮" },
-  { value: "gpt-5-mini", label: "GPT-5 Mini", speed: "Rapide", icon: "⚡" },
-  { value: "gpt-5", label: "GPT-5", speed: "Pro", icon: "🔮" },
+  { value: "gemini-flash", label: "Gemini Flash", speed: "Rapide" },
+  { value: "gemini-pro", label: "Gemini Pro", speed: "Pro" },
+  { value: "gpt-5-mini", label: "GPT-5 Mini", speed: "Rapide" },
+  { value: "gpt-5", label: "GPT-5", speed: "Pro" },
 ];
 
 const sttModels = [
@@ -50,7 +50,7 @@ export function ModelConfigPopover({ config, onChange, className }: ModelConfigP
           variant="outline"
           size="sm"
           className={cn(
-            "gap-2 h-8 px-3 bg-background/50 border-border/50 hover:bg-muted",
+            "gap-2 h-8 px-3 bg-background/50 border-border/50",
             className
           )}
         >
@@ -103,12 +103,9 @@ export function ModelConfigPopover({ config, onChange, className }: ModelConfigP
                 <SelectContent>
                   {textModels.map((model) => (
                     <SelectItem key={model.value} value={model.value}>
-                      <div className="flex items-center justify-between w-full gap-4">
-                        <span className="flex items-center gap-2">
-                          <span>{model.icon}</span>
-                          <span>{model.label}</span>
-                        </span>
-                        <span className="text-[10px] text-muted-foreground px-1.5 py-0.5 rounded bg-muted">
+                      <div className="flex items-center gap-3">
+                        <span>{model.label}</span>
+                        <span className="text-[10px] text-muted-foreground px-1.5 py-0.5 rounded bg-muted ml-auto">
                           {model.speed}
                         </span>
                       </div>
@@ -134,9 +131,9 @@ export function ModelConfigPopover({ config, onChange, className }: ModelConfigP
                 <SelectContent>
                   {sttModels.map((model) => (
                     <SelectItem key={model.value} value={model.value}>
-                      <div className="flex items-center justify-between w-full gap-4">
+                      <div className="flex items-center gap-3">
                         <span>{model.label}</span>
-                        <span className="text-[10px] text-muted-foreground px-1.5 py-0.5 rounded bg-muted">
+                        <span className="text-[10px] text-muted-foreground px-1.5 py-0.5 rounded bg-muted ml-auto">
                           {model.speed}
                         </span>
                       </div>
@@ -162,9 +159,9 @@ export function ModelConfigPopover({ config, onChange, className }: ModelConfigP
                 <SelectContent>
                   {ttsModels.map((model) => (
                     <SelectItem key={model.value} value={model.value}>
-                      <div className="flex items-center justify-between w-full gap-4">
+                      <div className="flex items-center gap-3">
                         <span>{model.label}</span>
-                        <span className="text-[10px] text-muted-foreground px-1.5 py-0.5 rounded bg-muted">
+                        <span className="text-[10px] text-muted-foreground px-1.5 py-0.5 rounded bg-muted ml-auto">
                           {model.speed}
                         </span>
                       </div>
@@ -178,7 +175,7 @@ export function ModelConfigPopover({ config, onChange, className }: ModelConfigP
           {/* Footer tip */}
           <div className="px-4 py-2.5 bg-muted/30 border-t border-border">
             <p className="text-[11px] text-muted-foreground">
-              💡 Les modèles "Pro" offrent de meilleures corrections mais sont plus lents
+              Les modèles "Pro" offrent de meilleures corrections mais sont plus lents
             </p>
           </div>
         </motion.div>

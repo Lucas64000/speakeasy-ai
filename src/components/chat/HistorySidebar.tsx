@@ -222,21 +222,21 @@ export function HistorySidebar({ collapsed, onCollapsedChange, className }: Hist
                 <Link
                   to={`/chat/${conversation.id}`}
                   className={cn(
-                    "flex items-center gap-3 p-2 rounded-lg transition-colors group",
+                    "flex items-center gap-2 p-2 rounded-lg transition-colors group",
                     isActive
                       ? "bg-sidebar-accent text-sidebar-accent-foreground"
                       : "hover:bg-sidebar-accent/50 text-sidebar-foreground"
                   )}
                 >
-                  {/* Flag */}
+                  {/* Status indicator */}
                   <div
                     className={cn(
-                      "w-8 h-8 rounded-lg flex items-center justify-center text-lg shrink-0",
-                      isActive ? "bg-primary/10" : "bg-sidebar-accent"
+                      "w-2 h-2 rounded-full shrink-0",
+                      conversation.status === "active" && "bg-primary",
+                      conversation.status === "completed" && "bg-success",
+                      conversation.status === "archived" && "bg-muted-foreground"
                     )}
-                  >
-                    {conversation.languageFlag}
-                  </div>
+                  />
 
                   {/* Content */}
                   <AnimatePresence>
@@ -245,14 +245,11 @@ export function HistorySidebar({ collapsed, onCollapsedChange, className }: Hist
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="flex-1 min-w-0"
+                        className="flex-1 min-w-0 overflow-hidden"
                       >
-                        <div className="flex items-center gap-1.5">
-                          <span className="font-medium text-sm truncate">
-                            {conversation.title}
-                          </span>
-                          {getStatusIcon(conversation.status)}
-                        </div>
+                        <span className="font-medium text-sm truncate block">
+                          {conversation.title}
+                        </span>
                         <p className="text-xs text-muted-foreground truncate">
                           {conversation.lastMessage}
                         </p>
@@ -267,7 +264,7 @@ export function HistorySidebar({ collapsed, onCollapsedChange, className }: Hist
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="text-[10px] text-muted-foreground shrink-0"
+                        className="text-[10px] text-muted-foreground shrink-0 ml-auto"
                       >
                         {formatRelativeTime(conversation.timestamp)}
                       </motion.span>
