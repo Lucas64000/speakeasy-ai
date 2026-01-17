@@ -51,10 +51,19 @@ export function FeedbackPanel({
   };
 
   const handleRating = (value: "up" | "down") => {
+    // Si on clique sur le même bouton, on annule
+    if (rating === value) {
+      setRating(null);
+      setShowCommentField(false);
+      setShowThanks(false);
+      return;
+    }
+    
     setRating(value);
     if (value === "down") {
       setShowCommentField(true);
     } else {
+      setShowCommentField(false);
       setShowThanks(true);
       setTimeout(() => setShowThanks(false), 2000);
     }
