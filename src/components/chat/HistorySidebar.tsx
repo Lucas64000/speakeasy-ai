@@ -8,6 +8,7 @@ import {
   MoreHorizontal,
   Check,
   Archive,
+  Trash2,
   ChevronLeft,
   ChevronRight
 } from "lucide-react";
@@ -103,7 +104,7 @@ interface HistorySidebarProps {
 export function HistorySidebar({ collapsed, onCollapsedChange, className }: HistorySidebarProps) {
   const { id: currentId } = useParams();
   const [search, setSearch] = useState("");
-  const [hoveredId, setHoveredId] = useState<string | null>(null);
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
 
   const filteredConversations = mockConversations.filter(
     (c) =>
@@ -210,19 +211,17 @@ export function HistorySidebar({ collapsed, onCollapsedChange, className }: Hist
         <div className="p-2 space-y-1">
           {filteredConversations.map((conversation) => {
             const isActive = conversation.id === currentId;
-            const isHovered = hoveredId === conversation.id;
+            const isMenuOpen = openMenuId === conversation.id;
 
             return (
               <div
                 key={conversation.id}
-                onMouseEnter={() => setHoveredId(conversation.id)}
-                onMouseLeave={() => setHoveredId(null)}
-                className="relative"
+                className="relative group"
               >
                 <Link
                   to={`/chat/${conversation.id}`}
                   className={cn(
-                    "flex items-center gap-2 p-2 rounded-lg transition-colors group",
+                    "flex items-center gap-2 p-2 pr-8 rounded-lg transition-colors",
                     isActive
                       ? "bg-sidebar-accent text-sidebar-accent-foreground"
                       : "hover:bg-sidebar-accent/50 text-sidebar-foreground"
@@ -245,67 +244,63 @@ export function HistorySidebar({ collapsed, onCollapsedChange, className }: Hist
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="flex-1 min-w-0 overflow-hidden"
+                        className="flex-1 min-w-0"
                       >
-                        <span className="font-medium text-sm truncate block">
-                          {conversation.title}
-                        </span>
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="font-medium text-sm truncate">
+                            {conversation.title}
+                          </span>
+                          <span className="text-[10px] text-muted-foreground shrink-0">
+                            {formatRelativeTime(conversation.timestamp)}
+                          </span>
+                        </div>
                         <p className="text-xs text-muted-foreground truncate">
                           {conversation.lastMessage}
                         </p>
                       </motion.div>
                     )}
                   </AnimatePresence>
-
-                  {/* Time */}
-                  <AnimatePresence>
-                    {!collapsed && (
-                      <motion.span
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        className="text-[10px] text-muted-foreground shrink-0 ml-auto"
-                      >
-                        {formatRelativeTime(conversation.timestamp)}
-                      </motion.span>
-                    )}
-                  </AnimatePresence>
                 </Link>
 
-                {/* Actions menu */}
-                <AnimatePresence>
-                  {!collapsed && isHovered && (
-                    <motion.div
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
-                      className="absolute right-2 top-1/2 -translate-y-1/2"
+                {/* Actions menu - always positioned, visible on hover or when open */}
+                {!collapsed && (
+                  <div
+                    className={cn(
+                      "absolute right-1 top-1/2 -translate-y-1/2 transition-opacity",
+                      isMenuOpen ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                    )}
+                  >
+                    <DropdownMenu 
+                      open={isMenuOpen} 
+                      onOpenChange={(open) => setOpenMenuId(open ? conversation.id : null)}
                     >
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-6 w-6"
-                            onClick={(e) => e.preventDefault()}
-                          >
-                            <MoreHorizontal className="w-3.5 h-3.5" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-40">
-                          <DropdownMenuItem>
-                            <Check className="w-4 h-4 mr-2" />
-                            Terminer
-                          </DropdownMenuItem>
-                          <DropdownMenuItem>
-                            <Archive className="w-4 h-4 mr-2" />
-                            Archiver
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-6 w-6 hover:bg-sidebar-accent"
+                          onClick={(e) => e.preventDefault()}
+                        >
+                          <MoreHorizontal className="w-3.5 h-3.5" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-40">
+                        <DropdownMenuItem>
+                          <Check className="w-4 h-4 mr-2" />
+                          Terminer
+                        </DropdownMenuItem>
+                        <DropdownMenuItem>
+                          <Archive className="w-4 h-4 mr-2" />
+                          Archiver
+                        </DropdownMenuItem>
+                        <DropdownMenuItem className="text-destructive focus:text-destructive">
+                          <Trash2 className="w-4 h-4 mr-2" />
+                          Supprimer
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+                )}
               </div>
             );
           })}
