@@ -50,7 +50,7 @@ export function ModelConfigPopover({ config, onChange, className }: ModelConfigP
           variant="outline"
           size="sm"
           className={cn(
-            "gap-2 h-8 px-3 bg-background/50 border-border/50",
+            "gap-2 h-8 px-3 bg-background/50 border-border/50 hover:bg-background/80",
             className
           )}
         >
