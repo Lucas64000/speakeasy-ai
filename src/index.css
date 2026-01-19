@@ -28,9 +28,9 @@
     --muted: 40 15% 94%;
     --muted-foreground: 220 10% 45%;
 
-    /* Accent: Warm amber */
-    --accent: 38 92% 50%;
-    --accent-foreground: 38 92% 12%;
+    /* Accent: Primary emerald for hovers */
+    --accent: 160 84% 28%;
+    --accent-foreground: 0 0% 100%;
 
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
@@ -45,8 +45,8 @@
     --success: 152 69% 42%;
     --success-foreground: 0 0% 100%;
     
-    --warning: 38 92% 50%;
-    --warning-foreground: 38 92% 12%;
+    --warning: 45 93% 47%;
+    --warning-foreground: 45 93% 12%;
 
     /* Message bubbles */
     --user-bubble: 160 84% 28%;
@@ -59,14 +59,14 @@
     --audio-progress: 0 0% 100%;
     --audio-button: 0 0% 100%;
 
-    /* Feedback */
-    --feedback-bg: 38 100% 97%;
-    --feedback-border: 38 70% 75%;
-    --feedback-text: 38 80% 30%;
+    /* Feedback - now using amber/yellow for warnings */
+    --feedback-bg: 45 100% 97%;
+    --feedback-border: 45 70% 75%;
+    --feedback-text: 45 80% 30%;
 
     /* Gradients */
     --gradient-primary: linear-gradient(135deg, hsl(160 84% 28%) 0%, hsl(170 70% 35%) 100%);
-    --gradient-accent: linear-gradient(135deg, hsl(38 92% 50%) 0%, hsl(28 90% 55%) 100%);
+    --gradient-accent: linear-gradient(135deg, hsl(160 84% 28%) 0%, hsl(170 70% 35%) 100%);
     --gradient-card: linear-gradient(180deg, hsl(0 0% 100%) 0%, hsl(40 20% 98%) 100%);
 
     /* Shadows */
@@ -105,8 +105,8 @@
     --muted: 220 20% 16%;
     --muted-foreground: 220 10% 55%;
 
-    --accent: 38 85% 55%;
-    --accent-foreground: 38 92% 8%;
+    --accent: 160 70% 45%;
+    --accent-foreground: 220 25% 8%;
 
     --destructive: 0 62% 45%;
     --destructive-foreground: 0 0% 100%;
@@ -124,9 +124,9 @@
     --audio-progress: 0 0% 100%;
     --audio-button: 0 0% 100%;
 
-    --feedback-bg: 38 60% 12%;
-    --feedback-border: 38 50% 30%;
-    --feedback-text: 38 70% 65%;
+    --feedback-bg: 45 60% 12%;
+    --feedback-border: 45 50% 30%;
+    --feedback-text: 45 70% 65%;
 
     --sidebar-background: 220 25% 10%;
     --sidebar-foreground: 40 20% 95%;
