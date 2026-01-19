@@ -173,9 +173,9 @@ export function FeedbackPanel({
                 initial={{ opacity: 0, x: -8 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: (corrections.length + index) * 0.05 }}
-                className="flex items-start gap-2 bg-accent/5 border border-accent/10 rounded-lg p-3"
+                className="flex items-start gap-2 bg-primary/5 border border-primary/10 rounded-lg p-3"
               >
-                <Lightbulb className="w-4 h-4 text-accent flex-shrink-0 mt-0.5" />
+                <Lightbulb className="w-4 h-4 text-primary flex-shrink-0 mt-0.5" />
                 <p className="text-xs text-foreground/80 leading-relaxed">
                   {item.explanation}
                 </p>

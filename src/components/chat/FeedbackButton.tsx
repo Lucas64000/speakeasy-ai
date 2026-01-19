@@ -26,7 +26,7 @@ export function FeedbackButton({
       className={cn(
         "flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium transition-colors duration-200",
         hasErrors
-          ? "bg-accent/15 text-accent hover:bg-accent/25"
+          ? "bg-warning/15 text-warning hover:bg-warning/25"
           : "bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground",
         className
       )}
@@ -39,7 +39,7 @@ export function FeedbackButton({
       />
       <span>Feedback</span>
       {hasErrors && (
-        <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse-soft" />
+        <span className="w-1.5 h-1.5 rounded-full bg-warning animate-pulse-soft" />
       )}
     </motion.button>
   );

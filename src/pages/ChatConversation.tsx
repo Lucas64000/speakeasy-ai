@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { ArrowLeft, Volume2, VolumeX } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { ChatMessage } from "@/components/chat/ChatMessage";
@@ -7,6 +7,9 @@ import { ConversationStatusMenu } from "@/components/conversation/ConversationSt
 import { HistorySidebar } from "@/components/chat/HistorySidebar";
 import { ModelConfigPopover } from "@/components/chat/ModelConfigPopover";
 import { ModelConfig, defaultModelConfig } from "@/components/conversation/ModelSelector";
+import { ImmersiveBackground } from "@/components/chat/ImmersiveBackground";
+import { ImmersiveSettingsDialog } from "@/components/settings/ImmersiveSettingsDialog";
+import { useImmersiveSettings } from "@/hooks/use-immersive-settings";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
@@ -88,6 +91,37 @@ export default function ChatConversation() {
   const [status, setStatus] = useState<ConversationStatus>("active");
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [modelConfig, setModelConfig] = useState<ModelConfig>(defaultModelConfig);
+  const { settings } = useImmersiveSettings();
+  
+  // Scene images based on conversation context - this would be AI-generated in production
+  const [sceneImage, setSceneImage] = useState<string | null>(null);
+  
+  // Generate scene based on conversation context
+  useEffect(() => {
+    if (settings.enabled && conversationInfo.title) {
+      // In production, this would call the AI image generation API
+      // For now, we use placeholder images based on the conversation title
+      const sceneMap: Record<string, string> = {
+        "restaurant": "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=1920&q=80",
+        "shopping": "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=1920&q=80",
+        "hotel": "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=1920&q=80",
+        "train": "https://images.unsplash.com/photo-1474487548417-781cb71495f3?w=1920&q=80",
+        "mercado": "https://images.unsplash.com/photo-1533900298318-6b8da08a523e?w=1920&q=80",
+      };
+      
+      const title = conversationInfo.title.toLowerCase();
+      for (const [key, url] of Object.entries(sceneMap)) {
+        if (title.includes(key)) {
+          setSceneImage(url);
+          return;
+        }
+      }
+      // Default scene
+      setSceneImage("https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=1920&q=80");
+    } else {
+      setSceneImage(null);
+    }
+  }, [settings.enabled, conversationInfo.title]);
 
   // Compute session stats from messages
   const sessionStats = useMemo(() => {
@@ -188,10 +222,19 @@ export default function ChatConversation() {
         onCollapsedChange={setSidebarCollapsed}
       />
 
-      {/* Main content */}
-      <div className="flex-1 flex flex-col min-w-0">
+      {/* Main content with immersive background */}
+      <div className="flex-1 flex flex-col min-w-0 relative">
+        {/* Immersive background */}
+        <ImmersiveBackground
+          enabled={settings.enabled}
+          imageUrl={sceneImage}
+          isGenerating={settings.isGenerating}
+        />
         {/* Header */}
-        <header className="bg-card/80 backdrop-blur-sm border-b border-border sticky top-0 z-10">
+        <header className={cn(
+          "backdrop-blur-sm border-b border-border sticky top-0 z-10",
+          settings.enabled ? "bg-card/60" : "bg-card/80"
+        )}>
           <div className="px-4 lg:px-6 py-3">
             <div className="flex items-center justify-between max-w-4xl mx-auto">
               <div className="flex items-center gap-3">
@@ -232,6 +275,9 @@ export default function ChatConversation() {
                   onChange={setModelConfig}
                 />
 
+                {/* Settings dialog (immersive mode) */}
+                <ImmersiveSettingsDialog />
+
                 {/* Audio toggle */}
                 <button
                   onClick={() => setAudioEnabled(!audioEnabled)}
@@ -257,7 +303,7 @@ export default function ChatConversation() {
         </header>
 
         {/* Messages */}
-        <main className="flex-1 overflow-y-auto">
+        <main className="flex-1 overflow-y-auto relative z-0">
           <div className="px-4 lg:px-6 py-6 max-w-4xl mx-auto">
             <div className="space-y-4">
               {messages.map((message) => (
@@ -272,7 +318,10 @@ export default function ChatConversation() {
 
         {/* Input - disabled if archived */}
         {status !== "archived" ? (
-          <div className="border-t border-border bg-card/80 backdrop-blur-sm">
+          <div className={cn(
+            "border-t border-border backdrop-blur-sm",
+            settings.enabled ? "bg-card/60" : "bg-card/80"
+          )}>
             <div className="max-w-4xl mx-auto">
               <ChatInput
                 onSendMessage={handleSendMessage}
